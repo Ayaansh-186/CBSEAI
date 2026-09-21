@@ -1,32 +1,21 @@
 @import "tailwindcss";
 
-/* ──────────────────────────────────────────────────────────────────────────
-   Padhle design tokens
-
-   The product is an answer sheet you can talk to. Everything here comes from
-   that: a cool paper ground, gel-pen blue as the only interactive colour, and
-   examiner red reserved strictly for marks and weak spots. Red never appears
-   as decoration — if you see it, it means marks.
-   ────────────────────────────────────────────────────────────────────────── */
-
 @theme {
-  --color-paper: #f2f3f7;
+  --color-paper: #ffffff;
   --color-sheet: #ffffff;
-  --color-ink: #12173a;
-  --color-ink-soft: #565d84;
-  --color-ink-faint: #969cbb;
-  --color-rule: #dfe2ef;
+  --color-ink: #0d0d0d;
+  --color-ink-soft: #5d5d5d;
+  --color-ink-faint: #8f8f8f;
+  --color-rule: #e5e5e5;
 
-  --color-pen: #2d4bff;
-  --color-pen-soft: #e8ebff;
-  --color-mark: #ff4d3d;
-  --color-mark-soft: #ffe9e6;
-  /* One highlighter in the whole product, and it's light blue — a second
-     colour would start competing with examiner red for meaning. */
-  --color-highlighter: #a5d8ff;
+  --color-pen: #0d0d0d;
+  --color-pen-soft: #ececec;
+  --color-mark: #d93025;
+  --color-mark-soft: #fce8e6;
+  --color-highlighter: transparent;
 
-  --font-display: var(--font-bricolage), ui-sans-serif, system-ui, sans-serif;
-  --font-sans: var(--font-schibsted), ui-sans-serif, system-ui, sans-serif;
+  --font-display: ui-sans-serif, system-ui, sans-serif;
+  --font-sans: ui-sans-serif, system-ui, sans-serif;
 
   --radius-bubble: 1.25rem;
 }
@@ -43,10 +32,12 @@
   --red: var(--color-mark);
   --red-soft: var(--color-mark-soft);
   --highlighter: var(--color-highlighter);
-
-  /* Ruled-sheet metrics. One number so the rules and the rail stay in step. */
-  --rule-gap: 30px;
-  --rail: 60px;
+  --sidebar: #f9f9f9;
+  --input: #f4f4f4;
+  --hover: #ececec;
+  --assistant-avatar: #0d0d0d;
+  --rule-gap: 28px;
+  --rail: 0px;
 
   color-scheme: light;
 }
@@ -54,32 +45,41 @@
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     --bg: #0b0d26;
-    --surface: #13163a;
-    --text: #edeef7;
-    --text-soft: #a8aecd;
-    --text-faint: #6d7398;
-    --rule: #22264f;
-    --accent: #7f92ff;
-    --accent-soft: #1d2255;
+    --surface: #212121;
+    --bg: #212121;
+    --text: #ececec;
+    --text-soft: #b4b4b4;
+    --text-faint: #8b8b8b;
+    --rule: #424242;
+    --accent: #ececec;
+    --accent-soft: #2f2f2f;
     --red: #ff6b5c;
     --red-soft: #3a1c1f;
-    --highlighter: #2a4d73;
+    --highlighter: transparent;
+    --sidebar: #171717;
+    --input: #2f2f2f;
+    --hover: #2f2f2f;
+    --assistant-avatar: #ececec;
     color-scheme: dark;
   }
 }
 
 :root[data-theme="dark"] {
-  --bg: #0b0d26;
-  --surface: #13163a;
-  --text: #edeef7;
-  --text-soft: #a8aecd;
-  --text-faint: #6d7398;
-  --rule: #22264f;
-  --accent: #7f92ff;
-  --accent-soft: #1d2255;
+  --bg: #212121;
+  --surface: #212121;
+  --text: #ececec;
+  --text-soft: #b4b4b4;
+  --text-faint: #8b8b8b;
+  --rule: #424242;
+  --accent: #ececec;
+  --accent-soft: #2f2f2f;
   --red: #ff6b5c;
   --red-soft: #3a1c1f;
-  --highlighter: #2a4d73;
+  --highlighter: transparent;
+  --sidebar: #171717;
+  --input: #2f2f2f;
+  --hover: #2f2f2f;
+  --assistant-avatar: #ececec;
   color-scheme: dark;
 }
 
@@ -125,35 +125,8 @@ body {
   }
 }
 
-/* ── The sheet ─────────────────────────────────────────────────────────────
-   Horizontal rules every --rule-gap, plus a single vertical margin line where
-   an Indian notebook has one. Marks annotations live to the left of it.
-   ──────────────────────────────────────────────────────────────────────── */
-
 .sheet {
-  background-color: var(--surface);
-  background-image:
-    repeating-linear-gradient(
-      to bottom,
-      transparent,
-      transparent calc(var(--rule-gap) - 1px),
-      var(--rule) calc(var(--rule-gap) - 1px),
-      var(--rule) var(--rule-gap)
-    ),
-    linear-gradient(
-      to right,
-      transparent var(--rail),
-      color-mix(in srgb, var(--red) 34%, transparent) var(--rail),
-      color-mix(in srgb, var(--red) 34%, transparent) calc(var(--rail) + 1px),
-      transparent calc(var(--rail) + 1px)
-    );
-  background-size: 100% var(--rule-gap), 100% 100%;
-}
-
-@media (max-width: 640px) {
-  :root {
-    --rail: 40px;
-  }
+  background: var(--surface);
 }
 
 /* ── The highlighter ───────────────────────────────────────────────────────
@@ -169,21 +142,10 @@ body {
    ──────────────────────────────────────────────────────────────────────── */
 
 .keyword {
-  background-color: transparent;
-  background-image: linear-gradient(
-    to right,
-    var(--highlighter),
-    var(--highlighter)
-  );
-  background-repeat: no-repeat;
-  background-size: 100% 0.36em;
-  background-position: 0 92%;
+  background: transparent;
   color: inherit;
-  padding-inline: 1px;
-  /* The band is drawn under the descenders, so give it somewhere to sit. */
-  padding-bottom: 0.05em;
-  border-radius: 1px;
-  font-weight: 550;
+  padding: 0;
+  font-weight: 650;
 }
 
 /* Two highlighted terms in a row should still read as two. */
@@ -192,24 +154,18 @@ body {
 }
 
 .swipe {
-  background-image: linear-gradient(
-    to right,
-    color-mix(in srgb, var(--highlighter) 85%, transparent),
-    color-mix(in srgb, var(--highlighter) 85%, transparent)
-  );
-  background-repeat: no-repeat;
-  background-size: 100% 60%;
-  background-position: 0 72%;
-  padding-inline: 2px;
+  background: transparent;
+  padding: 0;
+  font-weight: 600;
 }
 
 /* Answer text keeps the sheet's rhythm so lines land on the rules. */
 .answer-body {
-  line-height: var(--rule-gap);
+  line-height: 1.75;
 }
 
 .answer-body p {
-  margin: 0 0 var(--rule-gap);
+  margin: 0 0 1rem;
 }
 
 .answer-body p:last-child {

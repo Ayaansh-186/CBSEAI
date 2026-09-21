@@ -9,7 +9,8 @@ import type { Source } from "@/lib/types";
  *
  *   1. / 2. / •            → a numbered or bulleted step
  *   an equation-ish line   → set apart, slightly larger, tabular figures
- *   [S1]                   → an inline citation chip
+ *   [S1], [[source:id]]    → an inline citation chip
+ *   [[diagram:id]]         → a diagram citation chip
  *
  * If the fine-tune starts emitting tables or LaTeX, swap this for a real
  * parser — nothing else depends on its internals.
@@ -104,7 +105,7 @@ function isEquation(line: string) {
 /**
  * Two inline forms, split in one pass so they can sit next to each other:
  *   **term**  → keyword, underlined in light blue
- *   [S1]      → citation chip
+ *   [S1] / [[source:id]] / [[diagram:id]] → citation chip
  *
  * The model decides what's a keyword, not a word list here — what earns the
  * mark depends on the question, so a static glossary would highlight the
@@ -115,7 +116,7 @@ function renderInline(
   sources: Source[],
   onCite?: (s: Source) => void,
 ) {
-  const parts = text.split(/(\*\*[^*\n]+\*\*|\[S\d+\])/g);
+  const parts = text.split(/(\*\*[^*\n]+\*\*|\[S\d+\]|\[\[(?:source|diagram):[^\]]+\]\])/g);
 
   return parts.map((part, i) => {
     const keyword = part.match(/^\*\*([^*\n]+)\*\*$/);
@@ -128,9 +129,14 @@ function renderInline(
     }
 
     const m = part.match(/^\[S(\d+)\]$/);
-    if (!m) return <span key={i}>{part}</span>;
-    const source = sources[Number(m[1]) - 1];
+    const sourceRef = part.match(/^\[\[source:([^\]]+)\]\]$/);
+    const diagramRef = part.match(/^\[\[diagram:([^\]]+)\]\]$/);
+    if (!m && !sourceRef && !diagramRef) return <span key={i}>{part}</span>;
+    const source = m
+      ? sources[Number(m[1]) - 1]
+      : sources.find((s) => s.id === (sourceRef?.[1] ?? diagramRef?.[1]));
     if (!source) return null;
+    const label = m?.[1] ?? (diagramRef ? "D" : String(sources.indexOf(source) + 1));
     return (
       <button
         key={i}
@@ -144,7 +150,7 @@ function renderInline(
           fontWeight: 650,
         }}
       >
-        {m[1]}
+        {label}
       </button>
     );
   });

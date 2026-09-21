@@ -143,6 +143,9 @@ function applyEvent(
     case "steps":
       patch(id, (m) => ({ ...m, steps: event.steps, marks: event.marks }));
       break;
+    case "notice":
+      patch(id, (m) => ({ ...m, notice: event.message }));
+      break;
     case "error":
       patch(id, (m) => ({ ...m, error: event.message, streaming: false }));
       break;

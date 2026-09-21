@@ -1,4 +1,5 @@
 import { retrieve } from "@/lib/rag/retriever";
+import { routeQuery } from "@/lib/rag/router";
 import type { SourceKind, SubjectId } from "@/lib/types";
 
 export const runtime = "nodejs";
@@ -17,15 +18,17 @@ export async function GET(req: Request) {
   }
 
   const kinds = url.searchParams.get("kinds");
+  const route = routeQuery(q);
 
   try {
     const sources = await retrieve(q, {
       subject: (url.searchParams.get("subject") as SubjectId) ?? undefined,
       chapter: Number(url.searchParams.get("chapter")) || undefined,
       kinds: kinds ? (kinds.split(",") as SourceKind[]) : undefined,
+      route,
       topK: Number(url.searchParams.get("topK")) || 8,
     });
-    return Response.json({ query: q, count: sources.length, sources });
+    return Response.json({ query: q, route, count: sources.length, sources });
   } catch (err) {
     return Response.json(
       { error: err instanceof Error ? err.message : "Retrieval failed" },

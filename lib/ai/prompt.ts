@@ -1,4 +1,3 @@
-import { env } from "../config";
 import { chapterName } from "../data/syllabus";
 import type { ChatContext, Source } from "../types";
 
@@ -13,38 +12,24 @@ import type { ChatContext, Source } from "../types";
  * SYSTEM_PROMPT rather than re-typing it.
  */
 
-const LENGTH_BY_MARKS: Record<number, string> = {
-  1: "One line. A definition, a value with its unit, or a single named term. No preamble.",
-  2: "Two scoring points. Two or three sentences total.",
-  3: "Three scoring points, usually as a short list. Add a labelled diagram only if the chapter expects one.",
-  5: "Five scoring points. Structure it: statement, working or reasoning, labelled diagram if relevant, conclusion.",
-};
-
-export function buildSystemPrompt(ctx: ChatContext): string {
+export function buildSystemPrompt(ctx: ChatContext, sources: Source[] = []): string {
   const chapter = chapterName(ctx.subject, ctx.chapter);
+  const hasMarkingScheme = sources.some((s) => s.kind === "ms" || s.chunkType === "marking_scheme");
   const lines: string[] = [];
 
   lines.push(
-    `You are a CBSE Class ${ctx.grade} tutor. You were trained by two students who topped these boards recently, and you answer the way they did on the day.`,
+    `You are a CBSE Class ${ctx.grade} board exam coach. You are not CBSE, and you must not claim official status.`,
     ``,
-    `Edition: NCERT ${env.ncertYear}. If a question refers to content cut from this edition, say so and give the current chapter instead of answering from an older book.`,
+    `GROUNDING:`,
+    `1. Answer only from CONTEXT.`,
+    `2. For definitions and laws, prefer the NCERT wording in CONTEXT over paraphrases.`,
+    `3. If CONTEXT is insufficient, output exactly: The requested topic falls outside the retrieved CBSE context.`,
     ``,
-    `How you answer:`,
-    `- Write for the marking scheme, not for a blog. Every sentence should be a line an examiner can tick.`,
-    `- Use NCERT's exact terminology. If NCERT calls it "oxidising agent", never "electron acceptor".`,
-    `- Show the step that earns the step mark. In numericals: formula, substitution, answer, unit — the unit is a mark.`,
-    `- When a diagram earns marks, describe exactly what to draw and what to label. Never skip labels.`,
-    `- Wrap in **double asterisks** the exact words an examiner scans for — the term, the law's name, the condition, the unit. The app underlines these in highlighter, so mark two or three per answer at most. Marking a whole clause defeats the purpose.`,
-    `- Give a mnemonic or analogy only if it is one that is actually used and remembered, not one you invented on the spot.`,
-    `- Never invent a source, a page number, a past-paper year, or a statistic.`,
+    `FORMAT:`,
+    `1. Multi-mark or long answers: numbered points.`,
+    `2. Core technical terms in **bold**.`,
+    `3. Multi-line equations and chemical reactions in $$...$$. Short symbols may use \\(...\\) inline. Never use a single $ pair.`,
   );
-
-  if (ctx.marks) {
-    lines.push(
-      ``,
-      `This question is worth ${ctx.marks} mark${ctx.marks > 1 ? "s" : ""}. ${LENGTH_BY_MARKS[ctx.marks]}`,
-    );
-  }
 
   const modeLine: Record<ChatContext["mode"], string> = {
     answer:
@@ -67,23 +52,53 @@ export function buildSystemPrompt(ctx: ChatContext): string {
 
   lines.push(
     ``,
-    `Sources are supplied below under <context>. Ground every factual claim in them and cite as [S1], [S2] inline at the end of the sentence it supports. If the context does not cover the question, say what is missing rather than filling the gap from memory.`,
+    `MARKS:`,
+    `1. Include [1 Mark], [1/2 Mark], or similar only if a chunk_type=marking_scheme block is present in CONTEXT.`,
+    `2. If no marking_scheme block is present, do not invent, estimate, or append mark allocations.`,
+    `3. When marking_scheme is present, copy its split language; do not add extra mark labels.`,
     ``,
-    `Finish every board answer with a line of the form:`,
-    `MARKS: 3 | 1 — states the law | 1 — balanced equation | 1 — correct observation`,
-    `This line is parsed by the app and shown in the margin, so keep the format exact and put it last.`,
+    `CITATIONS:`,
+    `1. After a claim, cite [[source:CHUNK_ID]] using an id that appears in CONTEXT.`,
+    `2. Cite diagrams as [[diagram:DIAGRAM_ID]] only for ids in CONTEXT.`,
+    `3. Never output file paths, signed URLs, or image markdown.`,
+    ``,
+    `DIAGRAMS:`,
+    `1. Do not describe or invent a figure that is not in CONTEXT.`,
+    `2. If the question needs a figure and none is in CONTEXT, say the figure was not retrieved; do not draw a substitute for graded use.`,
   );
+
+  if (hasMarkingScheme) {
+    lines.push(
+      ``,
+      `Finish with a machine-readable line for the app margin:`,
+      `MARKS: 3 | 1 — states the law | 1 — balanced equation | 1 — correct observation`,
+      `Keep it last and copy the split from the marking_scheme context.`,
+    );
+  }
 
   return lines.join("\n");
 }
 
-/** Renders retrieved chunks into the <context> block the prompt refers to. */
+/** Renders retrieved chunks into the CONTEXT block the prompt refers to. */
 export function buildContextBlock(sources: Source[]): string {
   if (!sources.length) return "";
   const body = sources
-    .map((s, i) => `[S${i + 1}] ${s.label}\n${s.snippet}`)
+    .map((s) => {
+      const attrs = [
+        `chunk_type=${s.chunkType ?? s.kind}`,
+        `id=${s.id}`,
+        s.joinPrefix ? `join_prefix=${s.joinPrefix}` : "",
+        s.joinKey ? `join_key=${s.joinKey}` : "",
+        s.pageStart || s.pageEnd
+          ? `pages=${s.pageStart ?? s.pageEnd}-${s.pageEnd ?? s.pageStart}`
+          : s.page
+            ? `pages=${s.page}`
+            : "",
+      ].filter(Boolean);
+      return `[${attrs.join(" ")}]\n${s.content ?? s.snippet}`;
+    })
     .join("\n\n");
-  return `<context>\n${body}\n</context>`;
+  return `CONTEXT:\n${body}`;
 }
 
 /**

@@ -2,7 +2,6 @@
 
 import type { Message } from "@/lib/types";
 
-/** The student's turn: gel-pen blue, right-aligned, tight. */
 export function UserBubble({ message }: { message: Message }) {
   const images = message.content.filter((p) => p.type === "image");
   const text = message.content
@@ -11,11 +10,8 @@ export function UserBubble({ message }: { message: Message }) {
     .join("\n");
 
   return (
-    <div
-      className="flex justify-end py-3"
-      style={{ paddingLeft: "calc(var(--rail) + 18px)" }}
-    >
-      <div className="max-w-[min(76%,30rem)]">
+    <div className="flex justify-end py-3">
+      <div className="max-w-[min(85%,32rem)]">
         {images.length > 0 && (
           <div className="mb-1.5 flex flex-wrap justify-end gap-1.5">
             {images.map((img, i) => (
@@ -32,8 +28,8 @@ export function UserBubble({ message }: { message: Message }) {
         )}
         {text && (
           <div
-            className="rounded-[var(--radius-bubble)] rounded-br-md px-3.5 py-2.5 text-[14.5px] leading-[1.5]"
-            style={{ background: "var(--accent)", color: "#fff" }}
+            className="rounded-[20px] px-4 py-2.5 text-[15px] leading-[1.5]"
+            style={{ background: "var(--input)", color: "var(--text)" }}
           >
             {text}
           </div>

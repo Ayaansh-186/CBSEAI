@@ -1,7 +1,7 @@
 "use client";
 
 import type { Source, SourceKind } from "@/lib/types";
-import { Icon } from "@/components/ui/Icon";
+import { X } from "lucide-react";
 
 /**
  * Citations. Every chip is numbered to match the [1] marks in the answer, and
@@ -10,6 +10,8 @@ import { Icon } from "@/components/ui/Icon";
  */
 const KIND_STYLE: Record<SourceKind, { label: string; dot: string }> = {
   ncert: { label: "NCERT", dot: "var(--accent)" },
+  ms: { label: "Marking scheme", dot: "var(--red)" },
+  diagram: { label: "Diagram", dot: "#00A676" },
   exemplar: { label: "Exemplar", dot: "#00A676" },
   pyq: { label: "Past paper", dot: "#B45CFF" },
   sqp: { label: "Sample paper", dot: "#FF9500" },
@@ -38,7 +40,7 @@ export function Sources({
               key={s.id}
               type="button"
               onClick={() => onOpen(active ? null : s)}
-              className="inline-flex items-center gap-1.5 rounded-full border py-[3px] pl-[7px] pr-2.5 text-[12px] transition-colors"
+              className="inline-flex items-center gap-1.5 rounded-lg border py-1 pl-2 pr-2.5 text-[12px] transition-colors"
               style={{
                 borderColor: active ? "var(--accent)" : "var(--rule)",
                 background: active ? "var(--accent-soft)" : "transparent",
@@ -72,7 +74,7 @@ export function Sources({
             style={{ color: "var(--text-faint)" }}
             aria-label="Close snippet"
           >
-            <Icon.Close size={15} />
+            <X size={15} />
           </button>
           <blockquote
             className="pr-6 text-[13.5px] leading-relaxed"
@@ -80,12 +82,33 @@ export function Sources({
           >
             {open.snippet}
           </blockquote>
+          {open.kind === "diagram" && open.diagramUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={open.diagramUrl}
+              alt={open.label}
+              className="mt-3 max-h-[22rem] w-full rounded-lg object-contain"
+            />
+          ) : null}
           <figcaption
             className="mt-2 text-[11.5px]"
             style={{ color: "var(--text-faint)" }}
           >
             {open.label}
             {open.year ? ` · ${open.year} edition` : ""}
+            {open.officialUrl ? (
+              <>
+                {" · "}
+                <a
+                  href={open.officialUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="underline decoration-dotted underline-offset-2"
+                >
+                  official source
+                </a>
+              </>
+            ) : null}
           </figcaption>
         </figure>
       )}

@@ -1,20 +1,7 @@
 import type { Metadata, Viewport } from "next";
-import { Bricolage_Grotesque, Schibsted_Grotesk } from "next/font/google";
 import { APP } from "@/lib/config";
 import { AppShell } from "@/components/shell/AppShell";
 import "./globals.css";
-
-const bricolage = Bricolage_Grotesque({
-  subsets: ["latin"],
-  variable: "--font-bricolage",
-  display: "swap",
-});
-
-const schibsted = Schibsted_Grotesk({
-  subsets: ["latin"],
-  variable: "--font-schibsted",
-  display: "swap",
-});
 
 export const metadata: Metadata = {
   title: `${APP.name} — ${APP.tagline}`,
@@ -25,7 +12,7 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
-  themeColor: "#f2f3f7",
+  themeColor: "#ffffff",
 };
 
 export default function RootLayout({
@@ -34,7 +21,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${bricolage.variable} ${schibsted.variable}`}>
+    <html lang="en">
       <body>
         <AppShell>{children}</AppShell>
       </body>

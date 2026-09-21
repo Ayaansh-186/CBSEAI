@@ -34,6 +34,8 @@ export type SourceKind =
   | "exemplar"
   | "pyq"
   | "sqp"
+  | "ms"
+  | "diagram"
   | "model"
   | "cfpq"
   | "notes";
@@ -41,13 +43,23 @@ export type SourceKind =
 export interface Source {
   id: string;
   kind: SourceKind;
+  chunkType?: string;
   /** e.g. "NCERT Science · Ch 1 · p. 14" */
   label: string;
   /** Verbatim snippet shown in the answer sheet. Keep it short. */
   snippet: string;
+  /** Full retrieved block sent to the reasoner; never rendered as a card. */
+  content?: string;
+  officialUrl?: string;
+  diagramUrl?: string;
+  joinPrefix?: string;
+  joinKey?: string;
+  inActiveSyllabus?: boolean;
   subject?: SubjectId;
   chapter?: number;
   page?: number;
+  pageStart?: number;
+  pageEnd?: number;
   /** Academic year the source is pinned to, e.g. "2026-27". */
   year?: string;
   score?: number;
@@ -93,6 +105,8 @@ export interface Message {
   steps?: MarkStep[];
   /** Assistant-only. Total marks the answer is written for. */
   marks?: number;
+  /** Assistant-only. Orchestrator notices, not model prose. */
+  notice?: string;
   mode?: AnswerMode;
   /** Set while tokens are still arriving. */
   streaming?: boolean;
@@ -119,6 +133,7 @@ export type ChatEvent =
   | { type: "sources"; sources: Source[] }
   | { type: "token"; text: string }
   | { type: "steps"; steps: MarkStep[]; marks?: number }
+  | { type: "notice"; message: string }
   | { type: "error"; message: string }
   | { type: "done" };
 
@@ -132,18 +147,37 @@ export interface Chunk {
     subject: SubjectId;
     chapter: number;
     page?: number;
+    pageStart?: number;
+    pageEnd?: number;
     year: string;
     heading?: string;
+    chunkType?: string;
+    parentId?: string;
+    extractiveQuote?: string;
+    contentSha256?: string;
+    ncertEdition?: string;
+    language?: string;
+    conceptTags?: string[];
+    diagramIds?: string[];
+    linkedMsId?: string | null;
+    officialUrl?: string;
+    joinPrefix?: string;
+    joinKey?: string;
+    inActiveSyllabus?: boolean;
   };
 }
 
 export interface RetrievalFilters {
   subject?: SubjectId;
   chapter?: number;
+  chapters?: number[];
   kinds?: SourceKind[];
   year?: string;
   topK?: number;
+  route?: QueryRoute;
 }
+
+export type QueryRoute = "theory" | "numerical" | "diagram" | "marking" | "pyq";
 
 /** Per-topic mastery, from the student's own answers. Powers /graph. */
 export interface TopicMastery {

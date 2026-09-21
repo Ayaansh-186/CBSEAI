@@ -1,18 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import { GraduationCap } from "lucide-react";
 import type { Message, Source } from "@/lib/types";
 import { AnswerText } from "./AnswerText";
 import { Sources } from "./Sources";
 
-/**
- * One assistant turn, laid out as a page of an answer sheet.
- *
- * The left rail is the whole idea: marks sit outside the margin line, in red,
- * the way an examiner writes them. They appear only when the model has
- * actually returned a breakdown, so an empty rail means "not a marked answer"
- * rather than "zero".
- */
 export function AnswerSheet({ message }: { message: Message }) {
   const [openSource, setOpenSource] = useState<Source | null>(null);
   const text =
@@ -23,40 +16,16 @@ export function AnswerSheet({ message }: { message: Message }) {
   const empty = !text.trim();
 
   return (
-    <article className="relative py-4">
-      {/* Margin rail */}
-      <div
-        className="absolute left-0 top-4 flex flex-col items-end gap-1 pr-2.5"
-        style={{ width: "var(--rail)" }}
-        aria-hidden={!message.steps?.length}
+    <article className="flex gap-3 py-5 md:gap-4">
+      <span
+        className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full"
+        style={{ background: "var(--assistant-avatar)", color: "var(--surface)" }}
+        aria-hidden="true"
       >
-        {message.marks != null && (
-          <span
-            className="tabular-nums text-[15px] leading-none"
-            style={{
-              fontFamily: "var(--font-display)",
-              fontWeight: 700,
-              color: "var(--red)",
-            }}
-          >
-            {message.marks}
-            <span className="text-[10px]">m</span>
-          </span>
-        )}
-        {message.steps?.map((step, i) => (
-          <span
-            key={i}
-            title={step.for}
-            className="tabular-nums text-[11px] leading-none"
-            style={{ color: "var(--red)", opacity: 0.75 }}
-          >
-            ✓{step.marks}
-          </span>
-        ))}
-      </div>
+        <GraduationCap size={15} strokeWidth={1.9} />
+      </span>
 
-      {/* Answer */}
-      <div style={{ paddingLeft: "calc(var(--rail) + 18px)", paddingRight: "8px" }}>
+      <div className="min-w-0 flex-1 pt-0.5">
         {empty && message.streaming && <Thinking />}
 
         {!empty && (
@@ -79,13 +48,31 @@ export function AnswerSheet({ message }: { message: Message }) {
           </p>
         )}
 
+        {message.notice && (
+          <p
+            className="mt-3 rounded-lg border px-3 py-2 text-[12.5px]"
+            style={{
+              borderColor: "var(--rule)",
+              background: "color-mix(in srgb, var(--accent-soft) 52%, transparent)",
+              color: "var(--text-soft)",
+            }}
+          >
+            {message.notice}
+          </p>
+        )}
+
         {message.steps?.length ? (
           <div
-            className="mt-4 flex flex-wrap gap-x-4 gap-y-1 text-[12.5px]"
-            style={{ color: "var(--text-faint)" }}
+            className="mt-4 rounded-lg border px-3 py-2.5 text-[12.5px]"
+            style={{ borderColor: "var(--rule)", color: "var(--text-soft)" }}
           >
+            {message.marks != null && (
+              <span className="mr-3" style={{ color: "var(--red)", fontWeight: 650 }}>
+                {message.marks} marks
+              </span>
+            )}
             {message.steps.map((step, i) => (
-              <span key={i}>
+              <span key={i} className="mr-3 inline-block">
                 <span style={{ color: "var(--red)", fontWeight: 600 }}>
                   {step.marks}
                 </span>{" "}

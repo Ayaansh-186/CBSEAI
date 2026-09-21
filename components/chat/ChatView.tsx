@@ -2,21 +2,21 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import { ChevronDown, GraduationCap, RotateCcw } from "lucide-react";
 import { APP } from "@/lib/config";
 import { SUBJECT_MAP, chapterName } from "@/lib/data/syllabus";
 import { useChat } from "@/lib/useChat";
 import type { ChatContext, SubjectId } from "@/lib/types";
-import { Icon } from "@/components/ui/Icon";
 import { AnswerSheet } from "./AnswerSheet";
 import { UserBubble } from "./UserBubble";
 import { Composer } from "./Composer";
 
 const OPENERS = [
-  "Explain the three steps of photosynthesis, 3 marks",
-  "Why does a 5-mark answer on Ohm's law need four lines, not three?",
-  "Balance: Fe + H₂O → Fe₃O₄ + H₂",
-  "Which part of Nationalism in India comes up every single year?",
-];
+  ["Explain photosynthesis", "Write a 3-mark board answer"],
+  ["Solve an electricity numerical", "Show every scoring step"],
+  ["Balance a chemical equation", "Use the NCERT method"],
+  ["Revise a chapter", "Give me a 30-second recap"],
+] as const;
 
 export function ChatView() {
   const params = useSearchParams();
@@ -24,12 +24,10 @@ export function ChatView() {
     grade: APP.grade,
     subject: (params.get("subject") as SubjectId) ?? undefined,
     chapter: Number(params.get("chapter")) || undefined,
-    // Weak-spot cards link straight into drill mode.
     mode: (params.get("mode") as ChatContext["mode"]) ?? "answer",
   };
 
-  const { messages, context, setContext, send, stop, reset, busy } =
-    useChat(initial);
+  const { messages, context, setContext, send, stop, reset, busy } = useChat(initial);
   const bottom = useRef<HTMLDivElement>(null);
   const [pinned, setPinned] = useState(true);
 
@@ -52,23 +50,25 @@ export function ChatView() {
       />
 
       <div
-        className="sheet scroll-quiet min-h-0 flex-1 overflow-y-auto"
-        onScroll={(e) => {
-          const el = e.currentTarget;
+        className="scroll-quiet min-h-0 flex-1 overflow-y-auto"
+        onScroll={(event) => {
+          const el = event.currentTarget;
           setPinned(el.scrollHeight - el.scrollTop - el.clientHeight < 90);
         }}
       >
-        <div className="mx-auto w-full max-w-[46rem] px-3 pb-8 md:px-5">
+        <div className="mx-auto flex min-h-full w-full max-w-[48rem] flex-col px-4 pb-8 md:px-6">
           {messages.length === 0 ? (
-            <Empty onPick={(q) => send([{ type: "text", text: q }])} />
+            <Empty onPick={(question) => send([{ type: "text", text: question }])} />
           ) : (
-            messages.map((m) =>
-              m.role === "user" ? (
-                <UserBubble key={m.id} message={m} />
-              ) : (
-                <AnswerSheet key={m.id} message={m} />
-              ),
-            )
+            <div className="pt-5 md:pt-8">
+              {messages.map((message) =>
+                message.role === "user" ? (
+                  <UserBubble key={message.id} message={message} />
+                ) : (
+                  <AnswerSheet key={message.id} message={message} />
+                ),
+              )}
+            </div>
           )}
           <div ref={bottom} />
         </div>
@@ -101,91 +101,79 @@ function Header({
   hasMessages: boolean;
 }) {
   return (
-    <header
-      className="flex items-center gap-3 border-b px-4 py-2.5 md:px-6"
-      style={{ borderColor: "var(--rule)", background: "var(--surface)" }}
-    >
-      <div className="min-w-0 flex-1">
-        <span
-          className="block truncate text-[15px] leading-tight"
-          style={{ fontFamily: "var(--font-display)", fontWeight: 650 }}
-        >
-          {chapter ? `${chapterNo}. ${chapter}` : subject ?? "Anything from the syllabus"}
-        </span>
-        <span
-          className="block truncate text-[11.5px]"
-          style={{ color: "var(--text-faint)" }}
-        >
-          {subject && chapter ? subject : `Class ${APP.grade} · ${APP.board}`}
-        </span>
+    <header className="hidden h-14 shrink-0 items-center px-4 md:flex">
+      <button
+        type="button"
+        className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-[16px]"
+        style={{ fontWeight: 600 }}
+        title="Current tutor"
+      >
+        {APP.name}
+        <span style={{ color: "var(--text-faint)", fontWeight: 400 }}>Class 10</span>
+        <ChevronDown size={16} />
+      </button>
+
+      <div className="ml-auto flex items-center gap-2">
+        {(subject || chapter) && (
+          <button
+            type="button"
+            onClick={onClearScope}
+            className="rounded-lg px-3 py-1.5 text-[12px]"
+            style={{ background: "var(--input)", color: "var(--text-soft)" }}
+          >
+            {chapter ? `${subject} · Ch ${chapterNo}` : subject}
+          </button>
+        )}
+        {hasMessages && (
+          <button
+            type="button"
+            onClick={onReset}
+            className="flex h-9 w-9 items-center justify-center rounded-lg"
+            aria-label="Start a new chat"
+            title="Start a new chat"
+          >
+            <RotateCcw size={17} />
+          </button>
+        )}
       </div>
-
-      {(subject || chapter) && (
-        <button
-          type="button"
-          onClick={onClearScope}
-          className="rounded-full border px-2.5 py-1 text-[11.5px]"
-          style={{ borderColor: "var(--rule)", color: "var(--text-soft)" }}
-        >
-          Whole syllabus
-        </button>
-      )}
-
-      {hasMessages && (
-        <button
-          type="button"
-          onClick={onReset}
-          className="rounded-full p-1.5"
-          style={{ color: "var(--text-faint)" }}
-          aria-label="Start over"
-        >
-          <Icon.Reset size={17} />
-        </button>
-      )}
     </header>
   );
 }
 
-function Empty({ onPick }: { onPick: (q: string) => void }) {
+function Empty({ onPick }: { onPick: (question: string) => void }) {
   return (
-    <div className="flex min-h-[54vh] flex-col justify-center py-10">
-      <div style={{ paddingLeft: "calc(var(--rail) + 18px)" }}>
-        <h1
-          className="max-w-[18ch] text-[30px] leading-[1.1] tracking-[-0.035em] md:text-[38px]"
-          style={{ fontFamily: "var(--font-display)", fontWeight: 700 }}
-        >
-          Ask it the way the paper asks it.
-        </h1>
-        <p
-          className="mt-3 max-w-[46ch] text-[14.5px]"
-          style={{ color: "var(--text-soft)" }}
-        >
-          You get back what you'd write on the sheet — the steps, the
-          <span className="swipe"> exact NCERT wording</span>, and where each
-          mark comes from.
-        </p>
+    <div className="flex flex-1 flex-col justify-end pb-6 pt-10 md:justify-center md:pb-2">
+      <div className="mx-auto w-full max-w-[42rem]">
+        <div className="mb-7 flex flex-col items-center text-center">
+          <span
+            className="mb-5 flex h-12 w-12 items-center justify-center rounded-full"
+            style={{ background: "var(--assistant-avatar)", color: "var(--surface)" }}
+          >
+            <GraduationCap size={25} strokeWidth={1.8} />
+          </span>
+          <h1 className="text-[28px] leading-tight md:text-[32px]" style={{ fontWeight: 600 }}>
+            What can I help you study?
+          </h1>
+        </div>
 
-        <div className="mt-7 flex flex-col items-start gap-1.5">
-          {OPENERS.map((q) => (
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {OPENERS.map(([title, subtitle]) => (
             <button
-              key={q}
+              key={title}
               type="button"
-              onClick={() => onPick(q)}
-              className="max-w-full rounded-full border px-3.5 py-[7px] text-left text-[13.5px] transition-colors"
-              style={{ borderColor: "var(--rule)", color: "var(--text-soft)" }}
+              onClick={() => onPick(`${title}. ${subtitle}.`)}
+              className="min-h-[74px] rounded-xl border px-4 py-3 text-left transition-colors"
+              style={{ borderColor: "var(--rule)", background: "var(--surface)" }}
             >
-              {q}
+              <span className="block text-[14px]" style={{ fontWeight: 550 }}>
+                {title}
+              </span>
+              <span className="mt-0.5 block text-[12.5px]" style={{ color: "var(--text-faint)" }}>
+                {subtitle}
+              </span>
             </button>
           ))}
         </div>
-
-        <p
-          className="mt-8 flex items-center gap-1.5 text-[12px]"
-          style={{ color: "var(--text-faint)" }}
-        >
-          <Icon.Sparkle size={13} />
-          Photograph a question from your book and it reads the diagram too.
-        </p>
       </div>
     </div>
   );

@@ -2,6 +2,7 @@ import { chunkText } from "@/lib/rag/retriever";
 import { getVectorStore } from "@/lib/rag/vectorstore";
 import { env } from "@/lib/config";
 import type { Chunk } from "@/lib/types";
+import { validateChunks } from "@/lib/rag/ingest";
 
 export const runtime = "nodejs";
 export const maxDuration = 300;
@@ -23,6 +24,19 @@ export const maxDuration = 300;
  * Before launch: put an auth check at the top of this handler.
  */
 export async function POST(req: Request) {
+  if (!env.ingestApiKey) {
+    return Response.json(
+      { error: "INGEST_API_KEY is not configured." },
+      { status: 503 },
+    );
+  }
+  const supplied = req.headers.get("authorization")?.replace(/^Bearer\s+/i, "") ?? "";
+  const expected = Buffer.from(env.ingestApiKey);
+  const candidate = Buffer.from(supplied);
+  if (candidate.length !== expected.length || !timingSafeEqual(candidate, expected)) {
+    return Response.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   const body = await req.json();
   const store = getVectorStore();
 
@@ -32,15 +46,20 @@ export async function POST(req: Request) {
     if (Array.isArray(body.chunks)) {
       chunks = body.chunks.map((c: Chunk) => ({
         ...c,
-        meta: { year: env.ncertYear, ...c.meta },
+        meta: { ...c.meta, year: env.ncertYear },
       }));
     } else if (typeof body.text === "string" && body.meta) {
-      chunks = chunkText(body.text, { year: env.ncertYear, ...body.meta });
+      chunks = chunkText(body.text, { ...body.meta, year: env.ncertYear });
     } else {
       return Response.json(
         { error: "Send { text, meta } or { chunks }." },
         { status: 400 },
       );
+    }
+
+    const errors = validateChunks(chunks);
+    if (errors.length) {
+      return Response.json({ error: "Invalid chunks", errors }, { status: 400 });
     }
 
     await store.upsert(chunks);
@@ -57,3 +76,4 @@ export async function POST(req: Request) {
     );
   }
 }
+import { timingSafeEqual } from "node:crypto";

@@ -1,6 +1,9 @@
 import { getChatProvider } from "@/lib/ai/provider";
 import { buildContextBlock, buildSystemPrompt, extractMarks } from "@/lib/ai/prompt";
+import { verifyAnswer } from "@/lib/ai/verifier";
+import { answerCacheKey, getCachedAnswer, setCachedAnswer } from "@/lib/rag/cache";
 import { retrieve } from "@/lib/rag/retriever";
+import { isExamStyleRoute, routeQuery } from "@/lib/rag/router";
 import type { ChatEvent, ChatRequestBody } from "@/lib/types";
 
 export const runtime = "nodejs";
@@ -30,6 +33,26 @@ export async function POST(req: Request) {
             .map((p) => (p as { text: string }).text)
             .join(" ") ?? "";
         const hasImages = Boolean(last?.content.some((p) => p.type === "image"));
+        const route = routeQuery(query);
+        const cacheKey = answerCacheKey({
+          query,
+          subject: context.subject,
+          chapter: context.chapter,
+          mode: context.mode,
+          marks: context.marks,
+        });
+
+        if (query.trim() && !hasImages) {
+          const cached = await getCachedAnswer(cacheKey).catch(() => null);
+          if (cached) {
+            if (cached.sources.length) send({ type: "sources", sources: cached.sources });
+            if (cached.text) send({ type: "token", text: cached.text });
+            if (cached.steps?.length) send({ type: "steps", steps: cached.steps, marks: cached.marks });
+            if (cached.notice) send({ type: "notice", message: cached.notice });
+            send({ type: "done" });
+            return;
+          }
+        }
 
         // 1. Retrieve. Sources go out first so the UI can show what it's
         //    reading from while the model is still thinking.
@@ -39,6 +62,13 @@ export async function POST(req: Request) {
             sources = await retrieve(query, {
               subject: context.subject,
               chapter: context.chapter,
+              kinds:
+                route === "diagram"
+                  ? ["ncert", "diagram", "ms"]
+                  : route === "marking" || route === "pyq"
+                    ? ["ncert", "pyq", "sqp", "ms", "diagram"]
+                    : undefined,
+              route,
               topK: 4,
             });
             if (sources.length) send({ type: "sources", sources });
@@ -50,33 +80,74 @@ export async function POST(req: Request) {
         }
 
         // 2. Prompt.
-        const system = [buildSystemPrompt(context), buildContextBlock(sources)]
+        const hasMarkingScheme = sources.some(
+          (s) => s.kind === "ms" || s.chunkType === "marking_scheme",
+        );
+        const examStyle = context.mode === "answer" && isExamStyleRoute(route);
+
+        const system = [buildSystemPrompt(context, sources), buildContextBlock(sources)]
           .filter(Boolean)
           .join("\n\n");
 
-        // 3. Stream, holding back the trailing MARKS: line so it never flashes
-        //    on screen as text — it belongs in the margin rail.
+        // 3. Generate into a short server-side buffer. Structural verification
+        //    happens before anything reaches the answer sheet, so an invalid
+        //    citation or invented mark can never flash on screen.
         const provider = getChatProvider();
-        let full = "";
-        let emitted = 0;
-
-        for await (const delta of provider.stream({
-          system,
-          messages,
-          signal: req.signal,
-          hasImages,
-        })) {
-          full += delta;
-          const marksAt = full.search(/\n?MARKS:\s*\d/i);
-          const safeUpTo = marksAt === -1 ? full.length : marksAt;
-          if (safeUpTo > emitted) {
-            send({ type: "token", text: full.slice(emitted, safeUpTo) });
-            emitted = safeUpTo;
+        const generate = async (prompt: string) => {
+          let text = "";
+          for await (const delta of provider.stream({
+            system: prompt,
+            messages,
+            signal: req.signal,
+            hasImages,
+          })) {
+            text += delta;
           }
+          return text;
+        };
+
+        let full = await generate(system);
+        let verified = await verifyAnswer(full, sources, route);
+        if (!verified.citationOk || !verified.nliOk) {
+          full = await generate(
+            `${system}\n\nRETRY: The previous draft failed grounding verification. Regenerate once using only claims supported by CONTEXT and only the exact ids shown above.`,
+          );
+          verified = await verifyAnswer(full, sources, route);
         }
 
-        const { steps, marks } = extractMarks(full);
-        if (steps?.length) send({ type: "steps", steps, marks });
+        if (!verified.citationOk || !verified.nliOk) {
+          verified = {
+            ...verified,
+            text: "The requested topic falls outside the retrieved CBSE context.",
+          };
+        }
+
+        const { text: answerText, steps, marks } = extractMarks(verified.text);
+        if (answerText) send({ type: "token", text: answerText });
+        if (hasMarkingScheme && steps?.length) {
+          send({ type: "steps", steps, marks });
+        } else if (verified.notice || (!hasMarkingScheme && examStyle)) {
+          send({
+            type: "notice",
+            message:
+              verified.notice ??
+              "Verified NCERT theory. Mark allocation unavailable for this query.",
+          });
+        }
+
+        if (query.trim() && !hasImages) {
+          await setCachedAnswer(cacheKey, {
+            text: answerText,
+            sources,
+            steps,
+            marks,
+            notice:
+              verified.notice ??
+              (!hasMarkingScheme && examStyle
+                ? "Verified NCERT theory. Mark allocation unavailable for this query."
+                : undefined),
+          }).catch(() => undefined);
+        }
 
         send({ type: "done" });
       } catch (err) {
