@@ -155,7 +155,7 @@ export function Composer({
           </div>
         </div>
         <p className="mt-1.5 text-center text-[10.5px]" style={{ color: "var(--text-faint)" }}>
-          Answers use retrieved NCERT and CBSE sources. Check important details.
+          UI preview only. This copy does not connect to an AI model or source database.
         </p>
       </div>
     </div>

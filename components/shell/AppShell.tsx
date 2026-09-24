@@ -91,7 +91,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               CBSE Class 10
             </span>
             <span className="block text-[11px]" style={{ color: "var(--text-faint)" }}>
-              NCERT grounded
+              UI preview
             </span>
           </span>
         </div>

@@ -3,10 +3,7 @@ import type { Subject, SubjectId } from "../types";
 /**
  * Class 10 chapter list, ordered as in the rationalised NCERT.
  *
- * NOTE — this is the one file that must be re-checked every April. NCERT drops
- * and renumbers chapters between editions and the model is pinned to a year
- * (see env.ncertYear). When you refresh this, bump NCERT_YEAR too so retrieval
- * and the UI stay on the same edition.
+ * Static sample data for the interface preview. It is not a current syllabus.
  *
  * `marks` is approximate board weightage, used to order the study plan.
  */
