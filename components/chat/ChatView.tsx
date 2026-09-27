@@ -152,7 +152,7 @@ function Empty({ onPick }: { onPick: (question: string) => void }) {
             <GraduationCap size={25} strokeWidth={1.8} />
           </span>
           <h1 className="text-[28px] leading-tight md:text-[32px]" style={{ fontWeight: 600 }}>
-            Explore the Padhle interface
+            Ask Padhle about Class 10
           </h1>
         </div>
 

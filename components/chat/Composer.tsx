@@ -155,7 +155,7 @@ export function Composer({
           </div>
         </div>
         <p className="mt-1.5 text-center text-[10.5px]" style={{ color: "var(--text-faint)" }}>
-          UI preview only. This copy does not connect to an AI model or source database.
+          Answers require a connected model and retrieved CBSE sources.
         </p>
       </div>
     </div>

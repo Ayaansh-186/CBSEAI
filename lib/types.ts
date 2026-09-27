@@ -1,4 +1,8 @@
-/** Shared shapes for the interface preview. */
+/**
+ * Shared vocabulary for the whole app.
+ * The UI, the model adapter and the retriever all speak these shapes, so you
+ * can swap any one of the three without touching the other two.
+ */
 
 export type Grade = 10; // widen to 6 | 7 | 8 | 9 | 10 | 11 | 12 as we expand
 
@@ -24,7 +28,7 @@ export interface Chapter {
   marks: number;
 }
 
-/** Source-card styling retained for the interface components. */
+/** Where a retrieved chunk came from. Drives the citation chip styling. */
 export type SourceKind =
   | "ncert"
   | "exemplar"
@@ -44,7 +48,7 @@ export interface Source {
   label: string;
   /** Verbatim snippet shown in the answer sheet. Keep it short. */
   snippet: string;
-  /** Optional content for a preview source card. */
+  /** Full retrieved block sent to the reasoner; never rendered as a card. */
   content?: string;
   officialUrl?: string;
   diagramUrl?: string;
@@ -78,7 +82,7 @@ export type Role = "user" | "assistant";
 
 export interface ImagePart {
   type: "image";
-  /** Local preview URL. Images are not uploaded. */
+  /** data: URL or https URL. Qwen2.5-VL takes both. */
   url: string;
   alt?: string;
 }
@@ -95,13 +99,13 @@ export interface Message {
   role: Role;
   content: ContentPart[];
   createdAt: number;
-  /** Optional source cards for the interface. */
+  /** Assistant-only. Populated from the retriever. */
   sources?: Source[];
   /** Assistant-only. The marking-scheme breakdown shown in the margin rail. */
   steps?: MarkStep[];
   /** Assistant-only. Total marks the answer is written for. */
   marks?: number;
-  /** Optional interface notice. */
+  /** Assistant-only. Orchestrator notices, not model prose. */
   notice?: string;
   mode?: AnswerMode;
   /** Set while tokens are still arriving. */
@@ -109,7 +113,7 @@ export interface Message {
   error?: string;
 }
 
-/** Context for the interface controls. */
+/** Context the composer attaches to every turn. */
 export interface ChatContext {
   grade: Grade;
   subject?: SubjectId;
@@ -118,6 +122,62 @@ export interface ChatContext {
   /** Marks the question is worth — changes answer length materially. */
   marks?: 1 | 2 | 3 | 5;
 }
+
+export interface ChatRequestBody {
+  messages: Pick<Message, "role" | "content">[];
+  context: ChatContext;
+}
+
+/** Server-sent events emitted by /api/chat. */
+export type ChatEvent =
+  | { type: "sources"; sources: Source[] }
+  | { type: "token"; text: string }
+  | { type: "steps"; steps: MarkStep[]; marks?: number }
+  | { type: "notice"; message: string }
+  | { type: "error"; message: string }
+  | { type: "done" };
+
+/** A chunk of the corpus, post-ingestion. */
+export interface Chunk {
+  id: string;
+  text: string;
+  embedding?: number[];
+  meta: {
+    kind: SourceKind;
+    subject: SubjectId;
+    chapter: number;
+    page?: number;
+    pageStart?: number;
+    pageEnd?: number;
+    year: string;
+    heading?: string;
+    chunkType?: string;
+    parentId?: string;
+    extractiveQuote?: string;
+    contentSha256?: string;
+    ncertEdition?: string;
+    language?: string;
+    conceptTags?: string[];
+    diagramIds?: string[];
+    linkedMsId?: string | null;
+    officialUrl?: string;
+    joinPrefix?: string;
+    joinKey?: string;
+    inActiveSyllabus?: boolean;
+  };
+}
+
+export interface RetrievalFilters {
+  subject?: SubjectId;
+  chapter?: number;
+  chapters?: number[];
+  kinds?: SourceKind[];
+  year?: string;
+  topK?: number;
+  route?: QueryRoute;
+}
+
+export type QueryRoute = "theory" | "numerical" | "diagram" | "marking" | "pyq";
 
 /** Per-topic mastery, from the student's own answers. Powers /graph. */
 export interface TopicMastery {
