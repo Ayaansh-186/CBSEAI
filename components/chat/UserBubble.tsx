@@ -10,7 +10,7 @@ export function UserBubble({ message }: { message: Message }) {
     .join("\n");
 
   return (
-    <div className="flex justify-end py-3">
+    <div className="message-enter flex justify-end py-3">
       <div className="max-w-[min(85%,32rem)]">
         {images.length > 0 && (
           <div className="mb-1.5 flex flex-wrap justify-end gap-1.5">

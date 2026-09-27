@@ -39,7 +39,7 @@ export function ChatView() {
   const chapter = chapterName(context.subject, context.chapter);
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col">
+    <div className="page-enter flex min-h-0 flex-1 flex-col">
       <Header
         subject={subject?.name}
         chapter={chapter}
@@ -128,7 +128,7 @@ function Header({
           <button
             type="button"
             onClick={onReset}
-            className="flex h-9 w-9 items-center justify-center rounded-lg"
+            className="icon-button flex h-9 w-9 items-center justify-center rounded-lg"
             aria-label="Start a new chat"
             title="Start a new chat"
           >
@@ -156,13 +156,13 @@ function Empty({ onPick }: { onPick: (question: string) => void }) {
           </h1>
         </div>
 
-        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+        <div className="stagger-enter grid grid-cols-1 gap-2 sm:grid-cols-2">
           {OPENERS.map(([title, subtitle]) => (
             <button
               key={title}
               type="button"
               onClick={() => onPick(`${title}. ${subtitle}.`)}
-              className="min-h-[74px] rounded-xl border px-4 py-3 text-left transition-colors"
+              className="interactive-lift min-h-[74px] rounded-xl border px-4 py-3 text-left"
               style={{ borderColor: "var(--rule)", background: "var(--surface)" }}
             >
               <span className="block text-[14px]" style={{ fontWeight: 550 }}>

@@ -48,7 +48,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <Link
           href="/"
           onClick={() => setMobileOpen(false)}
-          className="flex h-9 w-9 items-center justify-center rounded-lg"
+          className="icon-button flex h-9 w-9 items-center justify-center rounded-lg"
           aria-label="New chat"
           title="New chat"
         >
@@ -64,7 +64,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               key={item.href}
               href={item.href}
               onClick={() => setMobileOpen(false)}
-              className="flex h-10 items-center gap-3 rounded-lg px-3 text-[14px] transition-colors"
+              aria-current={active ? "page" : undefined}
+              className="nav-link flex h-10 items-center gap-3 rounded-lg px-3 text-[14px]"
               style={{
                 background: active ? "var(--hover)" : "transparent",
                 color: "var(--text)",
@@ -115,7 +116,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <button
           type="button"
           onClick={() => setMobileOpen(true)}
-          className="flex h-10 w-10 items-center justify-center rounded-lg"
+          className="icon-button flex h-10 w-10 items-center justify-center rounded-lg"
           aria-label="Open menu"
         >
           <Menu size={21} />
@@ -125,7 +126,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </Link>
         <Link
           href="/"
-          className="flex h-10 w-10 items-center justify-center rounded-lg"
+          className="icon-button flex h-10 w-10 items-center justify-center rounded-lg"
           aria-label="New chat"
         >
           <SquarePen size={20} />
@@ -136,18 +137,18 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <div className="fixed inset-0 z-50 md:hidden">
           <button
             type="button"
-            className="absolute inset-0 bg-black/45"
+            className="mobile-scrim absolute inset-0 bg-black/45"
             onClick={() => setMobileOpen(false)}
             aria-label="Close menu"
           />
           <aside
-            className="relative h-full w-[min(86vw,320px)]"
+            className="mobile-drawer relative h-full w-[min(86vw,320px)]"
             style={{ background: "var(--sidebar)" }}
           >
             <button
               type="button"
               onClick={() => setMobileOpen(false)}
-              className="absolute right-3 top-3 z-10 flex h-9 w-9 items-center justify-center rounded-lg"
+              className="icon-button absolute right-3 top-3 z-10 flex h-9 w-9 items-center justify-center rounded-lg"
               aria-label="Close menu"
             >
               <X size={20} />

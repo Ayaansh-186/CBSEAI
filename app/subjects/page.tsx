@@ -25,7 +25,7 @@ export default function SubjectsPage() {
   }
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col">
+    <div className="page-enter flex min-h-0 flex-1 flex-col">
       <header
         className="border-b px-4 pb-2.5 pt-4 md:px-6"
         style={{ borderColor: "var(--rule)", background: "var(--surface)" }}
@@ -44,7 +44,7 @@ export default function SubjectsPage() {
                 key={s.id}
                 type="button"
                 onClick={() => setActive(s.id)}
-                className="shrink-0 rounded-full border px-3.5 py-1.5 text-[13px] transition-colors"
+                className="interactive-lift shrink-0 rounded-full border px-3.5 py-1.5 text-[13px]"
                 style={{
                   borderColor: on ? "var(--accent)" : "var(--rule)",
                   background: on ? "var(--accent)" : "transparent",
@@ -61,14 +61,14 @@ export default function SubjectsPage() {
 
       <div className="sheet scroll-quiet min-h-0 flex-1 overflow-y-auto">
         <div className="mx-auto w-full max-w-[46rem] px-3 py-4 md:px-5">
-          <ul className="flex flex-col">
+          <ul className="stagger-enter flex flex-col">
             {subject.chapters.map((c) => {
               const weak = weakByChapter.get(c.no);
               return (
                 <li key={c.no}>
                   <Link
                     href={`/?subject=${subject.id}&chapter=${c.no}`}
-                    className="group relative flex items-center gap-3 py-2.5"
+                    className="chapter-row group relative flex items-center gap-3 py-2.5"
                     style={{ paddingLeft: "calc(var(--rail) + 18px)" }}
                   >
                     <span

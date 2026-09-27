@@ -16,7 +16,7 @@ export function AnswerSheet({ message }: { message: Message }) {
   const empty = !text.trim();
 
   return (
-    <article className="flex gap-3 py-5 md:gap-4">
+    <article className="message-enter flex gap-3 py-5 md:gap-4">
       <span
         className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full"
         style={{ background: "var(--assistant-avatar)", color: "var(--surface)" }}
