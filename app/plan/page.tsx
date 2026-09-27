@@ -40,7 +40,7 @@ export default function PlanPage() {
     .slice(0, 6);
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col">
+    <div className="page-enter flex min-h-0 flex-1 flex-col">
       <header
         className="border-b px-4 py-4 md:px-6"
         style={{ borderColor: "var(--rule)", background: "var(--surface)" }}
@@ -73,7 +73,7 @@ export default function PlanPage() {
             Sorted by marks at stake, not by how the book is arranged.
           </p>
 
-          <ol className="flex flex-col">
+          <ol className="stagger-enter flex flex-col">
             {queue.map((item, i) => (
               <li
                 key={`${item.subject}-${item.topic}`}

@@ -20,7 +20,7 @@ export default function GraphPage() {
   const solid = ranked.filter((m) => m.mastery >= 0.7);
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col">
+    <div className="page-enter flex min-h-0 flex-1 flex-col">
       <header
         className="border-b px-4 py-4 md:px-6"
         style={{ borderColor: "var(--rule)", background: "var(--surface)" }}
@@ -50,11 +50,11 @@ export default function GraphPage() {
             Fix these first
           </h2>
 
-          <ul className="flex flex-col gap-2.5">
+          <ul className="stagger-enter flex flex-col gap-2.5">
             {weak.map((m) => (
               <li
                 key={`${m.subject}-${m.chapter}-${m.topic}`}
-                className="rounded-2xl border p-3.5"
+                className="interactive-lift rounded-2xl border p-3.5"
                 style={{
                   borderColor: "color-mix(in srgb, var(--red) 30%, transparent)",
                   background: "var(--surface)",
@@ -105,7 +105,7 @@ export default function GraphPage() {
 
                 <Link
                   href={`/?subject=${m.subject}&chapter=${m.chapter}&mode=drill`}
-                  className="mt-3 inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[12.5px]"
+                  className="interactive-lift mt-3 inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[12.5px]"
                   style={{ background: "var(--accent)", color: "#fff", fontWeight: 600 }}
                 >
                   Ask me three on this

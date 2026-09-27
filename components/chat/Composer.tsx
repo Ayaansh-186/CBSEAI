@@ -56,7 +56,7 @@ export function Composer({
     >
       <div className="mx-auto w-full max-w-[48rem]">
         <div
-          className="rounded-[26px] border px-3 pb-2 pt-2 shadow-sm"
+          className="composer-frame rounded-[26px] border px-3 pb-2 pt-2 shadow-sm"
           style={{ borderColor: "var(--rule)", background: "var(--input)" }}
         >
           {image && (
@@ -97,7 +97,7 @@ export function Composer({
             <button
               type="button"
               onClick={() => fileInput.current?.click()}
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full"
+              className="icon-button flex h-9 w-9 shrink-0 items-center justify-center rounded-full"
               aria-label="Add a photo"
               title="Add a photo"
             >
@@ -146,7 +146,7 @@ export function Composer({
               type="button"
               onClick={busy ? onStop : submit}
               disabled={!busy && !value.trim() && !image}
-              className="ml-auto flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-opacity disabled:opacity-30"
+              className="interactive-lift ml-auto flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-opacity disabled:opacity-30"
               style={{ background: "var(--text)", color: "var(--surface)" }}
               aria-label={busy ? "Stop generating" : "Send message"}
             >
@@ -155,7 +155,7 @@ export function Composer({
           </div>
         </div>
         <p className="mt-1.5 text-center text-[10.5px]" style={{ color: "var(--text-faint)" }}>
-          UI preview only. This copy does not connect to an AI model or source database.
+          Answers require a connected model and retrieved CBSE sources.
         </p>
       </div>
     </div>

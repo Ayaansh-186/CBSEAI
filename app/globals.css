@@ -129,6 +129,93 @@ body {
   background: var(--surface);
 }
 
+/* Small, composited movements keep navigation responsive without distracting
+   from the answer text. Reduced-motion users get the final state immediately. */
+@keyframes rise-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes drawer-in {
+  from { transform: translateX(-18px); opacity: 0.7; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+.page-enter,
+.message-enter {
+  animation: rise-in 300ms cubic-bezier(.2, .8, .2, 1) both;
+}
+
+.message-enter { animation-duration: 240ms; }
+
+.stagger-enter > *:nth-child(-n+8) {
+  animation: rise-in 320ms cubic-bezier(.2, .8, .2, 1) both;
+  animation-delay: calc(var(--item-index, 0) * 45ms);
+}
+.stagger-enter > *:nth-child(2) { --item-index: 1; }
+.stagger-enter > *:nth-child(3) { --item-index: 2; }
+.stagger-enter > *:nth-child(4) { --item-index: 3; }
+.stagger-enter > *:nth-child(5) { --item-index: 4; }
+.stagger-enter > *:nth-child(6) { --item-index: 5; }
+.stagger-enter > *:nth-child(7) { --item-index: 6; }
+.stagger-enter > *:nth-child(8) { --item-index: 7; }
+
+.interactive-lift {
+  transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease, background-color 180ms ease;
+}
+
+@media (hover: hover) {
+  .interactive-lift:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 18px rgba(0, 0, 0, .07);
+  }
+  .nav-link:hover,
+  .icon-button:hover {
+    background: var(--hover) !important;
+  }
+}
+
+.interactive-lift:active,
+.icon-button:active {
+  transform: scale(.98);
+}
+
+.nav-link {
+  position: relative;
+  transition: background-color 180ms ease, color 180ms ease, transform 180ms ease;
+}
+
+.nav-link[aria-current="page"]::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 11px;
+  bottom: 11px;
+  width: 3px;
+  border-radius: 3px;
+  background: var(--accent);
+  animation: rise-in 220ms ease both;
+}
+
+.icon-button { transition: transform 180ms ease, background-color 180ms ease; }
+.chapter-row { border-radius: 10px; transition: background-color 180ms ease; }
+@media (hover: hover) {
+  .chapter-row:hover { background: var(--input); }
+}
+.composer-frame { transition: border-color 180ms ease, box-shadow 180ms ease; }
+.composer-frame:focus-within {
+  border-color: var(--text-soft) !important;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--text) 8%, transparent);
+}
+
+.mobile-scrim { animation: fade-in 180ms ease both; }
+.mobile-drawer { animation: drawer-in 220ms cubic-bezier(.2, .8, .2, 1) both; }
+
 /* ── The highlighter ───────────────────────────────────────────────────────
    Light blue, one material, two thicknesses.
 

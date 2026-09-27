@@ -40,7 +40,7 @@ export function Sources({
               key={s.id}
               type="button"
               onClick={() => onOpen(active ? null : s)}
-              className="inline-flex items-center gap-1.5 rounded-lg border py-1 pl-2 pr-2.5 text-[12px] transition-colors"
+              className="interactive-lift inline-flex items-center gap-1.5 rounded-lg border py-1 pl-2 pr-2.5 text-[12px]"
               style={{
                 borderColor: active ? "var(--accent)" : "var(--rule)",
                 background: active ? "var(--accent-soft)" : "transparent",
@@ -61,7 +61,7 @@ export function Sources({
 
       {open && (
         <figure
-          className="relative mt-2.5 rounded-xl border px-3.5 py-3"
+          className="message-enter relative mt-2.5 rounded-xl border px-3.5 py-3"
           style={{
             borderColor: "var(--rule)",
             background: "color-mix(in srgb, var(--bg) 55%, transparent)",
